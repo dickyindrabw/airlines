@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-white py-10 px-4">
-    <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-10">
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-white rounded-xl py-10 px-4">
+    <div class="max-w-3xl mx-auto bg-gradient-to-r from-white to-blue-100 shadow-lg rounded-xl p-10">
         <h1 class="text-2xl font-bold text-center mb-8">Airplane Booking System</h1>
 
         <div class="border-b border-gray-300 pb-4 mb-6 flex justify-between items-center">
@@ -40,12 +40,12 @@
 
             <div class="flex justify-end pt-4 gap-3">
                 <a href="{{ route('flights.index') }}" class="px-5 py-2 bg-gray-200 hover:bg-gray-300 text-sm rounded-md font-semibold shadow transition">Cancel</a>
-                <button type="submit" class="px-5 py-2 bg-gray-700 hover:bg-gray-800 text-white text-sm rounded-md font-semibold shadow transition">Book Ticket</button>
+                <button type="submit" class="px-5 py-2 bg-blue-700 hover:bg-gray-800 text-white text-sm rounded-md font-semibold shadow transition">Book Ticket</button>
             </div>
         </form>
 
         <hr class="mt-10">
-        <p class="text-xs italic text-right text-gray-500 pt-2">by Web Framework and Deployment - 2024</p>
+        <p class="text-xs italic text-right text-gray-500 pt-2">by Dicky - 2025</p>
     </div>
 </div>
 @endsection

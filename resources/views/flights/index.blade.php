@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-blue-50 to-white py-10 px-4">
-    <h1 class="text-2xl font-bold text-center mb-10">Airplane Booking System</h1>
+<div class="min-h-screen bg-gradient-to-br from-blue-100 rounded-xl to-white py-4s0 px-4">
+    <h1 class="text-2xl font-bold text-center mb-3 p-5">Airplane Booking System</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         @foreach ($flights as $flight)
@@ -25,4 +25,5 @@
         @endforeach
     </div>
 </div>
+<p class="text-xs italic text-right text-gray-500 pt-2">by Dicky - 2025</p>
 @endsection

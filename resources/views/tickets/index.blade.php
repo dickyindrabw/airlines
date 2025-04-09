@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-gradient-to-br from-white to-blue-50 py-10 px-4">
+<div class="min-h-screen bg-gradient-to-br from-white to-blue-100 rounded-xl py-10 px-4">
     <h1 class="text-3xl font-bold text-center mb-6">
         🧑‍✈️ Tiket Penerbangan
     </h1>
@@ -101,5 +101,6 @@
             ⬅️ Kembali ke Daftar Penerbangan
         </a>
     </div>
+    <p class="text-xs italic text-right text-gray-500 pt-2">by Dicky - 2025</p>
 </div>
 @endsection
