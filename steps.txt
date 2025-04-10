@@ -1,0 +1,235 @@
+LANGKAH 1: Setup Proyek Laravel di Laragon
+
+1. Buka Laragon → klik Menu > Quick app > Laravel
+2. Beri nama proyek: `airline`
+3. Setelah selesai, buka terminal:
+4. Buat database MySQL baru, contoh: `airline`
+5. Edit file .env agar sesuai koneksi DB
+
+
+---------- untuk membersihkan cache
+php artisan config:clear
+----------
+
+cd D:/laragon/www/airline
+composer install
+cp .env.example .env
+php artisan key:generate
+
+# .env example
+DB_DATABASE=airline
+DB_USERNAME=root
+DB_PASSWORD=
+LANGKAH 2: Buat Migration & Model
+Gunakan artisan untuk membuat model dan migration:
+php artisan make:model Flight -m
+php artisan make:model Ticket -m
+Migration Flights
+
+Schema::create('flights', function (Blueprint $table) {
+    $table->id();
+    $table->string('code', 10);
+    $table->string('origin');
+    $table->string('destination');
+    $table->timestamp('departure_time');
+    $table->timestamp('arrival_time');
+    $table->timestamps();
+});
+Migration Tickets
+
+Schema::create('tickets', function (Blueprint $table) {
+    $table->id();
+    $table->foreignId('flight_id')->constrained()->onDelete('cascade');
+    $table->string('passenger_name');
+    $table->string('passenger_phone');
+    $table->string('seat_number');
+    $table->timestamp('boarding_time')->nullable();
+    $table->timestamps();
+});
+LANGKAH 3: Seeder Dummy Data
+Gunakan FlightSeeder dan tambahkan ke DatabaseSeeder:
+php artisan make:seeder FlightSeeder
+Contoh isi FlightSeeder
+
+DB::table('flights')->insert([
+  [
+    'code' => 'JT610',
+    'origin' => 'CGK',
+    'destination' => 'SUB',
+    'departure_time' => '2024-04-10 08:00:00',
+    'arrival_time' => '2024-04-10 10:00:00',
+    'created_at' => now(),
+    'updated_at' => now(),
+  ],
+]);
+LANGKAH 4: Routing & Controller
+Buat controller dan routing di web.php:
+php artisan make:controller FlightController
+php artisan make:controller TicketController
+Routing web.php
+
+Route::get('/', fn() => redirect('/flights'));
+Route::get('/flights', [FlightController::class, 'index'])->name('flights.index');
+Route::get('/flights/book/{flight}', [TicketController::class, 'create'])->name('tickets.create');
+Route::post('/ticket/submit', [TicketController::class, 'store'])->name('tickets.store');
+Route::get('/flights/ticket/{flight}', [TicketController::class, 'index'])->name('tickets.index');
+Route::put('/ticket/board/{ticket}', [TicketController::class, 'board'])->name('tickets.board');
+Route::delete('/ticket/delete/{ticket}', [TicketController::class, 'destroy'])->name('tickets.destroy');
+LANGKAH 5: Install Tailwind CSS
+Install Tailwind dan sesuaikan Vite dan app.css:
+npm install -D tailwindcss postcss autoprefixer
+npx tailwindcss init
+resources/css/app.css
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+vite.config.js
+
+import { defineConfig } from 'vite';
+import laravel from 'laravel-vite-plugin';
+
+export default defineConfig({
+  plugins: [
+    laravel({
+      input: ['resources/css/app.css', 'resources/js/app.js'],
+      refresh: true,
+    }),
+  ],
+});
+
+
+View: flights/index.blade.php
+@extends('layouts.app')
+
+@section('content')
+<div class="min-h-screen bg-gradient-to-br from-blue-50 to-white py-10 px-4">
+    <h1 class="text-3xl font-bold text-center mb-10">Airplane Booking System</h1>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        @foreach ($flights as $flight)
+        <div class="bg-white hover:bg-gray-50 rounded-xl shadow-md p-6">
+            <p class="text-xl font-semibold">{{ $flight->code }}</p>
+            <p>{{ $flight->origin }} → {{ $flight->destination }}</p>
+            <p><small>{{ $flight->departure_time }}</small></p>
+            <div class="mt-4 flex gap-2">
+                <a href="{{ route('tickets.index', $flight->id) }}" class="btn">Tiket</a>
+                <button onclick="openBookingModal(...)" class="btn btn-blue">Pesan Tiket</button>
+            </div>
+        </div>
+        @endforeach
+    </div>
+</div>
+@endsection
+
+
+View: tickets/create.blade.php
+@extends('layouts.app')
+
+@section('content')
+<div class="max-w-2xl mx-auto bg-white p-6 rounded shadow">
+    <h2 class="text-xl font-bold">Booking Tiket</h2>
+    <form action="{{ route('tickets.store') }}" method="POST">
+        @csrf
+        <input type="hidden" name="flight_id" value="{{ $flight->id }}">
+        <input type="text" name="passenger_name" placeholder="Nama Penumpang" required>
+        <input type="text" name="passenger_phone" placeholder="No HP" required>
+        <input type="text" name="seat_number" placeholder="No Kursi" required>
+        <button type="submit">Submit</button>
+    </form>
+</div>
+@endsection
+
+
+Controller: TicketController.php
+public function create(Flight $flight) {
+    return view('tickets.create', compact('flight'));
+}
+
+public function store(Request $request) {
+    $validated = $request->validate([
+        'flight_id' => 'required|exists:flights,id',
+        'passenger_name' => 'required',
+        'passenger_phone' => 'required',
+        'seat_number' => 'required'
+    ]);
+    Ticket::create($validated);
+    return redirect()->route('tickets.index', $validated['flight_id']);
+}
+
+public function index(Flight $flight) {
+    $tickets = $flight->tickets;
+    return view('tickets.index', compact('flight', 'tickets'));
+}
+
+public function board(Ticket $ticket) {
+    $ticket->update(['boarding_time' => now()]);
+    return back();
+}
+
+public function destroy(Ticket $ticket) {
+    if (!$ticket->boarding_time) $ticket->delete();
+    return back();
+}
+
+
+Controller: FlightController.php
+public function index() {
+    $flights = Flight::all();
+    return view('flights.index', compact('flights'));
+}
+
+
+View: tickets/index.blade.php
+@extends('layouts.app')
+
+@section('content')
+<div class="container mx-auto p-6">
+    <h2 class="text-xl font-bold">Daftar Tiket</h2>
+    <table class="w-full text-sm mt-4">
+        <thead>
+            <tr>
+                <th>Nama</th><th>No HP</th><th>No Kursi</th><th>Boarding</th><th>Aksi</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($tickets as $ticket)
+            <tr>
+                <td>{{ $ticket->passenger_name }}</td>
+                <td>{{ $ticket->passenger_phone }}</td>
+                <td>{{ $ticket->seat_number }}</td>
+                <td>{{ $ticket->boarding_time ?? 'Belum' }}</td>
+                <td>
+                    @if(!$ticket->boarding_time)
+                    <form method="POST" action="{{ route('tickets.board', $ticket->id) }}">
+                        @csrf @method('PUT')
+                        <button>Board</button>
+                    </form>
+                    @endif
+                    <form method="POST" action="{{ route('tickets.destroy', $ticket->id) }}">
+                        @csrf @method('DELETE')
+                        <button>Hapus</button>
+                    </form>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
+@endsection
+
+
+Model: Flight.php
+class Flight extends Model {
+    protected $fillable = ['code', 'origin', 'destination', 'departure_time', 'arrival_time'];
+    public function tickets() {
+        return $this->hasMany(Ticket::class);
+    }
+}
+Model: Ticket.php
+class Ticket extends Model {
+    protected $fillable = ['flight_id', 'passenger_name', 'passenger_phone', 'seat_number', 'boarding_time'];
+    public function flight() {
+        return $this->belongsTo(Flight::class);
+    }
+}
+
